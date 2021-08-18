@@ -7,9 +7,9 @@ creator:
 artifacts:
     - type: directory
       source: .
-      license: Apache-2.0
       gomodules: true
     - type: file
-      source: ./README.md
+      source: README.md
     - type: image
       source: ghcr.io/uservers/miniprow/miniprow:beta
+      license: Apache-2.0
