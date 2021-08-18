@@ -1,0 +1,15 @@
+---
+namespace: https://miniprow.io/
+license: Apache-2.0
+name: miniprow
+creator:
+    person: Puerco (adolfo.garcia@uservers.net)
+artifacts:
+    - type: directory
+      source: .
+      license: Apache-2.0
+      gomodules: true
+    - type: file
+      source: ./README.md
+    - type: image
+      source: ghcr.io/uservers/miniprow/miniprow:beta
