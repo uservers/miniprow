@@ -19,7 +19,7 @@ jobs:
        
         steps:
             - name: Install Kubernetes bom
-              uses: puerco/bom-installer@ee0001c9a661b75c7c72426f50811691e7901590
+              uses: puerco/bom-installer@aa0837e37b6965b5fc50adfad0683ec3c0a2c2c4
               with:
                 bom-release: ${{ github.event.inputs.bomVersion }}
             # - run: ldd --version
