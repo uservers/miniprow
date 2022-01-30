@@ -25,4 +25,4 @@ jobs:
               with:
                 bom-release: ${{ github.event.inputs.bomVersion }}
             # - run: ldd --version
-            - run: bom generate -f .sbom.yaml
+            - run: bom generate -c .sbom.yaml
