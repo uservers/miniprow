@@ -24,4 +24,4 @@ jobs:
               uses: puerco/bom-installer@ee0001c9a661b75c7c72426f50811691e7901590
               with:
                 bom-release: ${{ github.event.inputs.bomVersion }}
-            - run: ./bom generate -f .sbom.yaml
+            - run: bom generate -f .sbom.yaml
