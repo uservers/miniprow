@@ -1,0 +1,27 @@
+name: sbom
+on:
+    workflow_dispatch:
+        inputs:
+            bomVersion:
+                description: 'Version of bom to use for SBOM generation'
+                required: true
+                default: 'v0.2.1'
+                type: choice
+                options:
+                    - v0.3.0
+                    - v0.2.1
+                    - v0.2.0
+                        
+
+jobs:
+    generate-sbom:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+       
+        steps:
+            - name: Install Kubernetes bom
+              uses: kubernetes-sigs/bom-installer@ee0001c9a661b75c7c72426f50811691e7901590
+              with:
+                bom-release: ${{ github.event.inputs.bomVersion }}
+            - run: ./bom generate -f .sbom.yaml
