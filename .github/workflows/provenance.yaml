@@ -1,4 +1,4 @@
-name: Build SLSA Attestation
+name: provenance
 on:
   workflow_run:
     types: [completed]
@@ -13,4 +13,3 @@ jobs:
       actions: read
     steps:
     - uses: puerco/provenance-action
-    
