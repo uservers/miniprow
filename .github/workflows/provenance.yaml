@@ -12,5 +12,5 @@ jobs:
       contents: read
       actions: read
     steps:
-    - uses: puerco/provenance-action@a1d60342253e66ee52f322ab3085b40b7ac93ff6
-    
+    - uses: puerco/provenance-action@57c341b692c8ca242def3f3e4fc704a287b7f71a
+
