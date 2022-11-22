@@ -12,7 +12,7 @@ jobs:
       contents: read
       actions: read
     steps:
-    - uses: puerco/provenance-action@be3cfe2adf39a63501407e3ac2088114695bbdbf
+    - uses: puerco/provenance-action@7890b53974b71f7aac6e3cb5c0ea7595b9d5bddb
       with:
         GITHUB_TOKEN: ${{ secrets.MINIPROW_TOKEN }}
 
