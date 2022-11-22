@@ -1,0 +1,19 @@
+name: provenance
+on:
+  workflow_run:
+    types: [completed]
+    workflows: [build]
+jobs:
+  attest:
+    name: Attest Workflow Run
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+    - uses: puerco/provenance-action@ba340895d8f3caf53afe3e3d7517c151a87f3ba7
+      with:
+        GITHUB_TOKEN: ${{ secrets.MINIPROW_TOKEN }}
+
+
