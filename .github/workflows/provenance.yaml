@@ -1,0 +1,16 @@
+name: Build SLSA Attestation
+on:
+  workflow_run:
+    types: [completed]
+    workflows: [build]
+jobs:
+  attest:
+    name: Attest Workflow Run
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+    - uses: puerco/provenance-action
+    
