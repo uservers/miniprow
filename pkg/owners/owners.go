@@ -1,7 +1,6 @@
 package owners
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -298,7 +297,7 @@ func (ri *defaultReaderImplementation) readDirectoryOwners(path string) (list *L
 	}
 	logrus.Infof("Parsing owners file: %s", path)
 
-	yamlData, err := ioutil.ReadFile(filepath.Join(path, OwnersFileName))
+	yamlData, err := os.ReadFile(filepath.Join(path, OwnersFileName))
 	if err != nil {
 		return list, errors.Wrap(err, "reading OWNERS YAML data")
 	}
@@ -323,7 +322,7 @@ func (ri *defaultReaderImplementation) parseAliasFile(path string) (list *AliasL
 	}
 	list = NewAliasList()
 
-	yamlData, err := ioutil.ReadFile(path)
+	yamlData, err := os.ReadFile(path)
 	if err != nil {
 		return list, errors.Wrap(err, "reading OWNERS_ALIAS YAML data")
 	}
