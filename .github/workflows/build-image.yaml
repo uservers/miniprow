@@ -5,16 +5,8 @@ on:
     branches:
       - master
       - main
-    #tags:
-    #  - 'v*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "tag to use"
-        type: string
-        default: ""
-        required: false
-
+  
 jobs:
   setup:
     name: Build Container Image
@@ -49,7 +41,7 @@ jobs:
           echo "GIT_VERSION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Print info
-        run: echo "${{ env.GIT_VERSION }} / Git Commit ${{ env.GIT_COMMIT }} - ${{ env.DOMAIN }}"
+        run: echo "Version ${{ env.GIT_VERSION }} / Git Commit ${{ env.GIT_COMMIT }} Tag ${{ env.TAG }}"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -66,7 +58,7 @@ jobs:
 
 
       - name: Build Release
-        if: ${{ env.TAG != '' }} && ${{ env.TAG != 'main' }} 
+        if: ${{ env.TAG != '' }} 
         run: |
           ko build --bare ./actions/broker/ -t latest -t ${{ env.TAG }} -t ${{ env.GIT_VERSION }} --platform=linux/amd64
         
