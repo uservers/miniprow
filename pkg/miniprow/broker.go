@@ -805,7 +805,6 @@ func (bi *defaultBrokerImplementation) GetRepoOwners(
 	}
 	// There must be a better way to find the cloned repo
 	reader := owners.NewReader()
-	reader.Options().SetRepoRoot(repoRoot)
 	list, err = reader.GetDirectoryOwners(repoRoot)
 	if err != nil {
 		return list, errors.Wrap(err, "reading top repository OWNERS file")
@@ -913,7 +912,6 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 	}
 
 	reader := owners.NewReader()
-	reader.Options().SetRepoRoot(repoRoot)
 
 	// Range the files in the PR and get the owners
 	for _, f := range files {
@@ -962,7 +960,6 @@ func (bi *defaultBrokerImplementation) GetNeededApprovers(
 
 	// Build the pnwers reader
 	reader := owners.NewReader()
-	reader.Options().SetRepoRoot(repoRoot)
 	list = owners.NewList()
 	for _, file := range files {
 		logrus.Infof("📂 Getting approvers for %s", file.GetFilename())
