@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2022 U Servers Comunicaciones, SC
+# SPDX-License-Identifier: Apache-2.0
+
+defaultBaseImage: cgr.dev/chainguard/wolfi-base	
+
+builds:
+  - id: miniprow
+    #dir: .
+    main: ./actions/broker/
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -extldflags "-static"
+      - "{{ .Env.LDFLAGS }}"
