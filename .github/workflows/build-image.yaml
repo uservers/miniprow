@@ -2,8 +2,11 @@ name: build-image
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+      - main
+    #tags:
+    #  - 'v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -16,9 +19,13 @@ jobs:
   setup:
     name: Build Container Image
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
+    #permissions:
+      #packages: read/write
+      #contents: read
+    env:
+      KO_DOCKER_REPO: ghcr.io/${{ github.actor }}/miniprow
+      TAG: ""
+
     steps:
 
       - name: Check out repository code
@@ -31,13 +38,18 @@ jobs:
       - uses: imjasonh/setup-ko@v0.6
         with:
           version: v0.12.0
+      
+      - name: Read Tag
+        if: startsWith(${{ env.GITHUB_REF }}, 'refs/tags/v')
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> "$GITHUB_ENV"
 
-      - name: Get current tag
-        if: ${{ github.event_name != 'workflow_dispatch'}}
-        run: echo "GIT_VERSION=${GITHUB_REF#refs/*/}" >> "$GITHUB_ENV"
+      - name: Get Short Commit SHA
+        run: |
+          echo ${GITHUB_REF}
+          echo "GIT_VERSION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Print info
-        run: echo "TAG=${{ env.GIT_VERSION }} / Git Commit ${{ env.GIT_COMMIT }} - ${{ env.DOMAIN }}"
+        run: echo "${{ env.GIT_VERSION }} / Git Commit ${{ env.GIT_COMMIT }} - ${{ env.DOMAIN }}"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -49,11 +61,15 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container
+
+      - name: Build Release
+        if: ${{ env.TAG != '' }}
         run: |
-          ko build --bare ./actions/broker/ -t canary --platform=linux/amd64
-        env:
-          KO_DOCKER_REPO: ghcr.io/${{ github.actor }}/miniprow
+          ko build --bare ./actions/broker/ -t latest -t ${{ env.TAG }} -t ${{ env.GIT_VERSION }} --platform=linux/amd64
+        
+      - name: Build Canary
+        if: ${{ env.TAG == '' }}
+        run: ko build --bare ./actions/broker/ -t canary -t ${{ env.GIT_VERSION }} --platform=linux/amd64
