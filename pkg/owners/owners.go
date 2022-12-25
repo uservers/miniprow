@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2022 U Servers Comunicaciones, SC
+// SPDX-License-Identifier: Apache-2.0
+
 package owners
 
 type Reader struct {
