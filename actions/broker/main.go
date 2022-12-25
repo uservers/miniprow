@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/uServers/miniprow/pkg/miniprow"
 )
@@ -21,11 +21,11 @@ func main() {
 
 	broker, err := miniprow.NewBroker()
 	if err != nil {
-		logrus.Error(errors.Wrap(err, "Creating MiniProw broker"))
+		logrus.Error(fmt.Errorf("creating MiniProw broker: %w", err))
 		os.Exit(1)
 	}
 	if err := broker.Run(); err != nil {
-		logrus.Error(errors.Wrap(err, "MiniProw broker run returned error"))
+		logrus.Error(fmt.Errorf("miniprow broker run returned error: %w", err))
 		os.Exit(1)
 	}
 }
