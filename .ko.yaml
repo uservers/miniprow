@@ -3,14 +3,14 @@
 
 defaultBaseImage: cgr.dev/chainguard/wolfi-base	
 
-builds:
-  - id: miniprow
-    #dir: .
-    main: ./actions/broker/
-    env:
-      - CGO_ENABLED=0
-    flags:
-      - -trimpath
-    ldflags:
-      - -extldflags "-static"
-      - "{{ .Env.LDFLAGS }}"
+#builds:
+#  - id: miniprow
+#    #dir: .
+#    main: ./actions/broker/
+#    env:
+#      - CGO_ENABLED=0
+#    flags:
+#      - -trimpath
+#    ldflags:
+#      - -extldflags "-static"
+#      - "{{ .Env.LDFLAGS }}"
