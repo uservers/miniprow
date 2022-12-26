@@ -3,7 +3,7 @@
 
 #defaultBaseImage: cgr.dev/chainguard/wolfi-base	
 #defaultBaseImage: debian:11-slim
-defaultBaseImage: debian:latest
+defaultBaseImage: ubuntu:latest
 
 #builds:
 #  - id: miniprow
