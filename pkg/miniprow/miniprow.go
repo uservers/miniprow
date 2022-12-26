@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/uServers/miniprow/pkg/github"
+	"github.com/uservers/miniprow/pkg/github"
 )
 
 type SlashCommand struct {
