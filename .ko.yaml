@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 #defaultBaseImage: cgr.dev/chainguard/wolfi-base	
+defaultBaseImage: debian:11-slim
 
 #builds:
 #  - id: miniprow
