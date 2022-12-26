@@ -10,7 +10,7 @@ import (
 	gogithub "github.com/google/go-github/v48/github"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/uServers/miniprow/pkg/github/internal"
+	"github.com/uservers/miniprow/pkg/github/internal"
 	"golang.org/x/oauth2"
 	"sigs.k8s.io/release-utils/env"
 )

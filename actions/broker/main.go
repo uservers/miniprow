@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"github.com/uServers/miniprow/pkg/miniprow"
+	"github.com/uservers/miniprow/pkg/miniprow"
 )
 
 func main() {

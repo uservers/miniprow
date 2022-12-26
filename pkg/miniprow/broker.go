@@ -10,8 +10,8 @@ import (
 	gogithub "github.com/google/go-github/v48/github"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/uServers/miniprow/pkg/github"
-	"github.com/uServers/miniprow/pkg/owners"
+	"github.com/uservers/miniprow/pkg/github"
+	"github.com/uservers/miniprow/pkg/owners"
 	"sigs.k8s.io/release-utils/util"
 )
 

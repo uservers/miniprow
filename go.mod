@@ -1,4 +1,4 @@
-module github.com/uServers/miniprow
+module github.com/uservers/miniprow
 
 go 1.19
 
