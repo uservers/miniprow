@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	gogithub "github.com/google/go-github/v33/github"
+	gogithub "github.com/google/go-github/v48/github"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/uServers/miniprow/pkg/github/internal"
