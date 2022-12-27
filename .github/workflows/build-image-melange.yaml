@@ -32,7 +32,7 @@ jobs:
     - uses: chainguard-images/actions/apko-publish@main
       with:
         config: apko.yaml
-        tag: ghcr.io/uservers/miniprow:canary
+        tag: ghcr.io/${{ github.repository_owner }}/miniprow:canary
         image_refs: images.txt
         keyring-append: /github/workspace/melange.rsa.pub
         archs: x86_64,aarch64
