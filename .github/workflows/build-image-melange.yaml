@@ -29,6 +29,15 @@ jobs:
     - uses: chainguard-dev/actions/melange-build@main
       with:
         config: melange.yaml
-        # package-name: ruby
-        archs: x86_64,aarch64
+        #archs: x86_64,aarch64
+        archs: x86_64
         sign-with-temporary-key: true
+    - uses: chainguard-images/actions/apko-build@main
+      with:
+        config: apko.yaml
+        tag: ghcr.io/uservers/miniprow:canary
+        image_refs: images.txt
+        keyring-append: /github/workspace/melange.rsa.pub
+        #archs: x86_64,aarch64
+        archs: x86_64
+
