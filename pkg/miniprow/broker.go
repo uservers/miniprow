@@ -950,12 +950,12 @@ func (bi *defaultBrokerImplementation) GetNeededApprovers(
 	// Check the repository root before proceeding
 	repoRoot := bi.RepoRoot(ctx)
 	if repoRoot == "" {
-		return nil, errors.New("unable to load missing approvers, reporoot not found")
+		return nil, fmt.Errorf("unable to load missing approvers, reporoot not found")
 	}
 	// Get the owners list for every file and append them
 	files, err := bi.GetChangedFiles(ctx, gh)
 	if err != nil {
-		return nil, errors.Wrap(err, "listing pull request files")
+		return nil, fmt.Errorf("listing pull request files: %w", err)
 	}
 
 	// Build the pnwers reader
@@ -967,8 +967,9 @@ func (bi *defaultBrokerImplementation) GetNeededApprovers(
 			filepath.Join(repoRoot, file.GetFilename()),
 		)
 		if err != nil {
-			return nil, errors.Wrapf(
-				err, "getting owners for path: %s", file.GetFilename(),
+			return nil, fmt.Errorf(
+				"getting owners for path: %s: %w",
+				filepath.Join(repoRoot, file.GetFilename()), err,
 			)
 		}
 		list.Append(loopList)
