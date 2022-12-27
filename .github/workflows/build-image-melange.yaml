@@ -1,0 +1,34 @@
+on:
+  workflow_dispatch: {}
+
+name: Build miniprow image
+
+# Don't run multiple releases concurrently.
+concurrency: release
+
+#env:
+#  GO_VERSION: 1.18
+
+jobs:
+  melange:
+    name: Build miniprow OCI image
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v3
+    #- uses: sigstore/cosign-installer@main
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v1.2.0
+    #- uses: chainguard-dev/actions/setup-melange@main
+    #- uses: chainguard-dev/actions/melange-keygen@main
+    - uses: chainguard-dev/actions/melange-build@main
+      with:
+        config: melange.yaml
+        # package-name: ruby
+        archs: x86_64,aarch64
+        sign-with-temporary-key: true

@@ -1,0 +1,19 @@
+package:
+  name: miniprow
+  version: v0.0.1
+  epoch: 0
+  description: "A tiny incarnation of prow that runs in github actions"
+  target-architecture:
+    - x86_64
+
+environment:
+  contents:
+    keyring:
+      - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    repositories:
+      - https://packages.wolfi.dev/os
+pipeline:
+  - uses: go/install
+    with:
+      package: github.com/uservers/miniprow/actions/broker
+      version: HEAD
