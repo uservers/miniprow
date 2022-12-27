@@ -35,6 +35,19 @@ approvers:
 
 	// Subdirectory
 	require.Nil(t, os.Mkdir(filepath.Join(dir, "sub"), os.FileMode(0o755)))
+	require.Nil(t, os.Mkdir(filepath.Join(dir, ".github"), os.FileMode(0o755)))
+	require.Nil(
+		t, os.WriteFile(
+			filepath.Join(dir, "sub", "test.txt"),
+			[]byte("test"), os.FileMode(0644),
+		),
+	)
+	require.Nil(
+		t, os.WriteFile(
+			filepath.Join(dir, ".github", "dependabot.yml"),
+			[]byte("test"), os.FileMode(0644),
+		),
+	)
 
 	// Write owners files
 	require.Nil(t, os.WriteFile(filepath.Join(dir, "OWNERS"), []byte(fileData1), os.FileMode(0o644)))
@@ -45,6 +58,17 @@ approvers:
 	require.Nil(t, err, err)
 	require.Equal(t, 4, len(owners.Reviewers))
 	require.Equal(t, 4, len(owners.Approvers))
+
+	owners, err = impl.computeOwners(filepath.Join(dir, "sub", "test.txt"))
+	require.Nil(t, err, err)
+	require.Equal(t, 4, len(owners.Reviewers))
+	require.Equal(t, 4, len(owners.Approvers))
+
+	os.Chdir(dir)
+	owners, err = impl.computeOwners(filepath.Join(".github", "dependabot.yml"))
+	require.Nil(t, err, err)
+	require.Equal(t, 2, len(owners.Reviewers))
+	require.Equal(t, 3, len(owners.Approvers))
 }
 
 func TestReadDirectoryOwners(t *testing.T) {
