@@ -13,7 +13,7 @@ concurrency: imagebuild
 
 env:
   TAG: ""
-  STEM: true
+  STEM: 1
 #  GO_VERSION: 1.18
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v') != true
       run: |
         echo "TAG=canary" >> "$GITHUB_ENV"
-        echo "STEM=false" >> "$GITHUB_ENV"
+        echo "STEM=0" >> "$GITHUB_ENV"
     
     - uses: actions/checkout@v3    
     #- uses: sigstore/cosign-installer@main
