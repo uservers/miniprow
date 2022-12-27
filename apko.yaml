@@ -6,6 +6,7 @@ contents:
     - '@local packages'
   packages:
     - wolfi-base
+    - libstdc++
     - miniprow@local
   
 accounts:
