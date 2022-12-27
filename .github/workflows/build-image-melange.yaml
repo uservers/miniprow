@@ -1,16 +1,15 @@
 on:
-  #push:
-  #  tags:
-  #    - 'v*'
-  #  branches:
-  #    - master
-  #    - main
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - master
+      - main
   workflow_dispatch: {}
 
 name: Build miniprow image
 
-# Don't run multiple releases concurrently.
-concurrency: release
+concurrency: imagebuild
 
 env:
   TAG: ""
