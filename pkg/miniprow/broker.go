@@ -2,13 +2,13 @@ package miniprow
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	gogithub "github.com/google/go-github/v48/github"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/uservers/miniprow/pkg/github"
 	"github.com/uservers/miniprow/pkg/owners"
@@ -67,12 +67,12 @@ func NewBroker() (*Broker, error) {
 
 	// Load configuration file
 	if err := broker.LoadConfigFile(); err != nil {
-		return nil, errors.Wrap(err, "loading config file")
+		return nil, fmt.Errorf("loading config file: %w", err)
 	}
 
 	// Load the state
 	if err := broker.InitState(); err != nil {
-		return nil, errors.Wrap(err, "initilizing state")
+		return nil, fmt.Errorf("initilizing state: %w", err)
 	}
 
 	return broker, nil
@@ -85,26 +85,26 @@ func (b *Broker) Run() (err error) {
 	case "COMMENT":
 		if err := b.HandleComment(); err != nil {
 			logrus.WithField("step", "Run").Error(err)
-			return errors.Wrap(err, "running comment handler")
+			return fmt.Errorf("running comment handler: %w", err)
 		}
 	case "NEWPR":
 		if err := b.HandleNewPR(); err != nil {
 			logrus.WithField("step", "Run").Error(err)
-			return errors.Wrap(err, "running new PR handler")
+			return fmt.Errorf("running new PR handler: %w", err)
 		}
 	case "CHECKMERGE":
 		if err := b.CheckMerge(); err != nil {
 			logrus.WithField("step", "Run").Error(err)
-			return errors.Wrap(err, "running merge check")
+			return fmt.Errorf("running merge check: %w", err)
 		}
 	case "TESTSDONE":
 		if err := b.CreateTestsDoneComment(); err != nil {
 			logrus.WithField("step", "Run").Error(err)
-			return errors.Wrap(err, "running merge check")
+			return fmt.Errorf("running merge check: %w", err)
 		}
 	default:
 		logrus.WithField("step", "Run").Error("MiniProw event not found or wrong key")
-		return errors.New("Unkown MiniProw event")
+		return errors.New("unkown MiniProw event")
 	}
 
 	// TODO: Check if pr is merged before continuing
@@ -112,7 +112,7 @@ func (b *Broker) Run() (err error) {
 		// Checking if PR can be merged
 		ready, err := b.LabelsReadyToMerge()
 		if err != nil {
-			return errors.Wrap(err, "checking if PR is ready")
+			return fmt.Errorf( "checking if PR is ready: %w", err)
 		}
 
 		if !ready {
@@ -123,7 +123,7 @@ func (b *Broker) Run() (err error) {
 		// Verify the test suite has been successful
 		checksPassed, err := b.VerifyChecks()
 		if err != nil {
-			return errors.Wrap(err, "verifying check suite results from the PR")
+			return fmt.Errorf( "verifying check suite results from the PR: %w", err)
 		}
 
 		if !checksPassed {
@@ -133,7 +133,7 @@ func (b *Broker) Run() (err error) {
 
 		// Merge PR
 		if err := b.MergePullRequest(); err != nil {
-			return errors.Wrap(err, "merging pull request")
+			return fmt.Errorf("merging pull request: %w", err)
 		}
 	*/
 	return nil
@@ -146,7 +146,7 @@ func (b *Broker) GitHub() *github.GitHub {
 		if err == nil {
 			b.github = gh
 		} else {
-			logrus.Error(errors.Wrap(err, "creating github object"))
+			logrus.Error(fmt.Errorf("creating github object: %w", err))
 		}
 	}
 	return b.github
@@ -198,7 +198,7 @@ func (bi *defaultBrokerImplementation) GetGitHub(ctx context.Context) (*github.G
 	}
 	gh, err := github.NewWithToken(ctx.Value(ckey).(ContextData).GitHubToken())
 	if err != nil {
-		return nil, errors.Wrap(err, "creating github object")
+		return nil, fmt.Errorf("creating github object: %w", err)
 	}
 	return gh, nil
 }
@@ -215,7 +215,7 @@ func (bi *defaultBrokerImplementation) GetComment(
 	// Call the github api to get the comment
 	comment, err = gh.GetComment(org, repo, commentID)
 	if err != nil {
-		return comment, errors.Wrap(err, "getting comment from github")
+		return comment, fmt.Errorf("getting comment from github: %w", err)
 	}
 	return comment, nil
 }
@@ -232,7 +232,7 @@ func (bi *defaultBrokerImplementation) GetPullRequest(
 	// Call the github api to get the comment
 	pr, err = gh.GetPullRequest(context.Background(), org, repo, prID)
 	if err != nil {
-		return pr, errors.Wrap(err, "getting comment from github")
+		return pr, fmt.Errorf("getting comment from github: %w", err)
 	}
 	return pr, nil
 }
@@ -249,7 +249,7 @@ func (bi *defaultBrokerImplementation) GetIssue(
 	// Call the github api to get the comment
 	pr, err = gh.GetIssue(context.Background(), org, repo, issueID)
 	if err != nil {
-		return pr, errors.Wrap(err, "getting comment from github")
+		return pr, fmt.Errorf("getting comment from github: %w", err)
 	}
 	return pr, nil
 }
@@ -265,14 +265,14 @@ func (bi *defaultBrokerImplementation) ReadState(ctx context.Context) (s *State,
 	s = &State{}
 	gh, err := bi.GetGitHub(ctx)
 	if err != nil {
-		return s, errors.Wrap(err, "creating github client")
+		return s, fmt.Errorf("creating github client: %w", err)
 	}
 
 	// Check if we are dealing with an issue and assign to state
 	if issueID := ctx.Value(ckey).(ContextData).Issue(); issueID != 0 {
 		issue, err := bi.GetIssue(gh, ctx.Value(ckey).(ContextData).Repository(), issueID)
 		if err != nil {
-			return nil, errors.Wrap(err, "reading issue to assign in state")
+			return nil, fmt.Errorf("reading issue to assign in state: %w", err)
 		}
 		logrus.WithContext(ctx).WithField("step", "ReadState").Infof(
 			"Got Issue #%d from context", issue.GetNumber(),
@@ -284,7 +284,7 @@ func (bi *defaultBrokerImplementation) ReadState(ctx context.Context) (s *State,
 	if prID := ctx.Value(ckey).(ContextData).PullRequest(); prID != 0 {
 		pr, err := bi.GetPullRequest(gh, ctx.Value(ckey).(ContextData).Repository(), prID)
 		if err != nil {
-			return nil, errors.Wrapf(err, "fetching PR #%d", prID)
+			return nil, fmt.Errorf("fetching PR #%d: %w", prID, err)
 		}
 		logrus.WithContext(ctx).WithField("step", "ReadState").Infof(
 			"Got Pull Request #%d from context", pr.GetNumber(),
@@ -319,7 +319,7 @@ func (b *Broker) HandleNewPR() error {
 	// Get the current user top-level permissions
 	userPerms, err := b.impl.GetUserPerms(b.ctx, author)
 	if err != nil {
-		return errors.Wrap(err, "getting the PR author's permissions")
+		return fmt.Errorf("getting the PR author's permissions: %w", err)
 	}
 
 	// list of approvals needed:
@@ -335,7 +335,7 @@ func (b *Broker) HandleNewPR() error {
 		// First, get the list of current approvers
 		neededApproves, err = b.impl.GetNeededApprovers(b.ctx, b.GitHub())
 		if err != nil {
-			return errors.Wrap(err, "getting current PR approvers")
+			return fmt.Errorf("getting current PR approvers: %w", err)
 		}
 	}
 
@@ -344,7 +344,7 @@ func (b *Broker) HandleNewPR() error {
 	if userPerms["approver"] || len(neededApproves.Files) == 0 {
 		logrus.Infof("→ %s is an aprrover", author)
 		if err := b.impl.AddLabel(b.ctx, b.GitHub(), "approved"); err != nil {
-			return errors.Wrap(err, "adding approved label")
+			return fmt.Errorf("adding approved label: %w", err)
 		}
 	}
 
@@ -354,7 +354,7 @@ func (b *Broker) HandleNewPR() error {
 		// ... and also an approver *and* we have automerge on
 		if userPerms["approver"] && b.config.options.AutoMerge {
 			if err := b.impl.AddLabel(b.ctx, b.GitHub(), "lgtm"); err != nil {
-				return errors.Wrap(err, "adding approved lgtm")
+				return fmt.Errorf("adding approved lgtm: %w", err)
 			}
 		}
 	}
@@ -363,7 +363,10 @@ func (b *Broker) HandleNewPR() error {
 		logrus.Infof("User %s is not an approver nor a reviewer", author)
 	}
 
-	return errors.Wrap(b.CreateApprovalNotifierComment(), "creating approval notifier")
+	if err := b.CreateApprovalNotifierComment(); err != nil {
+		return fmt.Errorf("creating approval notifier: %w", err)
+	}
+	return nil
 }
 
 func (b *Broker) CheckMerge() error {
@@ -371,13 +374,13 @@ func (b *Broker) CheckMerge() error {
 	// add the comment again
 	checksReady, err := b.ChecksReadyToMerge()
 	if err != nil {
-		return errors.Wrap(err, "looking at pull request check runs")
+		return fmt.Errorf("looking at pull request check runs: %w", err)
 	}
 
 	// 2. Check the labels are ready
 	labelsReady, err := b.LabelsReadyToMerge()
 	if err != nil {
-		return errors.Wrap(err, "looking at pull request labels")
+		return fmt.Errorf("looking at pull request labels: %w", err)
 	}
 
 	// We need the labels and the checks to merge
@@ -394,7 +397,7 @@ func (b *Broker) CheckMerge() error {
 
 	// Merge PR → → → →
 	if err := b.MergePullRequest(); err != nil {
-		return errors.Wrap(err, "merging pull request")
+		return fmt.Errorf("merging pull request: %w", err)
 	}
 	return nil
 }
@@ -407,7 +410,7 @@ func (b *Broker) HandleComment() error {
 	)
 	gh, err := b.impl.GetGitHub(b.ctx)
 	if err != nil {
-		return errors.Wrap(err, "creating github object")
+		return fmt.Errorf("creating github object: %w", err)
 	}
 
 	// Get the comment
@@ -416,7 +419,7 @@ func (b *Broker) HandleComment() error {
 		b.ctx.Value(ckey).(ContextData).CommentID(),
 	)
 	if err != nil {
-		return errors.Wrap(err, "getting comment from github")
+		return fmt.Errorf("getting comment from github: %w", err)
 	}
 
 	// The comment is the APPROVALNOTIFIER comment, handle it now
@@ -426,7 +429,7 @@ func (b *Broker) HandleComment() error {
 	// check it is comming from the bot account:
 	botuser, err := b.impl.GetBotUser(b.ctx, b.GitHub())
 	if err != nil {
-		return errors.Wrap(err, "getting bot user")
+		return fmt.Errorf("getting bot user: %w", err)
 	}
 	if b.impl.IsApprovalNotifier(comment, botuser.GetLogin()) {
 		logrus.Info(" > Event triggered by Approval Notifier Comment")
@@ -441,7 +444,7 @@ func (b *Broker) HandleComment() error {
 	)
 	commands, err := ParseSlashCommands(strings.TrimSpace(comment.GetBody()))
 	if err != nil {
-		return errors.Wrap(err, "parsing commands")
+		return fmt.Errorf("parsing commands: %w", err)
 	}
 
 	logrus.WithField("handler", "comment handler").Infof(
@@ -453,9 +456,9 @@ func (b *Broker) HandleComment() error {
 	for _, cmd := range commands {
 		if err := cmd.Run(b); err != nil {
 			if combinedError == nil {
-				combinedError = errors.New("Errors while running handlers")
+				combinedError = errors.New("errors while running handlers")
 			}
-			combinedError = errors.Wrap(err, combinedError.Error())
+			combinedError = fmt.Errorf(combinedError.Error(), err)
 		}
 	}
 
@@ -464,9 +467,10 @@ func (b *Broker) HandleComment() error {
 	}
 
 	// Check if we can merge after the slash commands
-	return errors.Wrap(
-		b.CreateApprovalNotifierComment(), "creating ANC after slash commands",
-	)
+	if err := b.CreateApprovalNotifierComment(); err != nil {
+		return fmt.Errorf("creating ANC after slash commands: %w", err)
+	}
+	return nil
 }
 
 // ChecksReadyToMerge returns true if the checks in a PR are ready to merge
@@ -475,7 +479,7 @@ func (b *Broker) ChecksReadyToMerge() (ready bool, err error) {
 	// Get the latest runs in the pull request
 	checkruns, err := b.impl.GetPRCheckRuns(b.ctx, b.GitHub(), b.State)
 	if err != nil {
-		return ready, errors.Wrap(err, "getting check runs for pull request")
+		return ready, fmt.Errorf("getting check runs for pull request: %w", err)
 	}
 
 	failedJobs := []*gogithub.CheckRun{}
@@ -507,7 +511,7 @@ func (b *Broker) ChecksReadyToMerge() (ready bool, err error) {
 // CreateTestsDoneComment creates a comment to notify that tests are done
 func (b *Broker) CreateTestsDoneComment() error {
 	if _, err := b.impl.CreatePRComment(b.ctx, b.GitHub(), b.State, "/"+TestsDoneCommand); err != nil {
-		return errors.Wrap(err, "creating approval notifier comment")
+		return fmt.Errorf("creating approval notifier comment: %w", err)
 	}
 	return nil
 }
@@ -518,18 +522,18 @@ func (b *Broker) CreateApprovalNotifierComment() error {
 	// First, check if the comment exists already and delete it
 	comment, err := b.impl.GetApprovalNotifierComment(b.ctx, b.GitHub(), b.State)
 	if err != nil {
-		return errors.Wrap(err, "while lookig for the approve notifier comment")
+		return fmt.Errorf("while lookig for the approve notifier comment: %w", err)
 	}
 
 	repoRoot := b.RepoRoot()
 	if repoRoot == "" {
-		return errors.Wrap(err, "could not get repo root")
+		return fmt.Errorf("could not get repo root: %w", err)
 	}
 
 	// Get the list of needed approvers
 	neededApprovers, err := b.impl.GetNeededApprovers(b.ctx, b.GitHub())
 	if err != nil {
-		return errors.Wrap(err, "getting current PR approvers")
+		return fmt.Errorf("getting current PR approvers: %w", err)
 	}
 
 	if len(neededApprovers.Approvers) == 0 {
@@ -539,7 +543,7 @@ func (b *Broker) CreateApprovalNotifierComment() error {
 	// Get the approvers and reviewers
 	approvers, _, err := b.impl.GetApprovers(b.ctx, b.GitHub())
 	if err != nil {
-		return errors.Wrap(err, "while getting current PR approvers")
+		return fmt.Errorf("while getting current PR approvers: %w", err)
 	}
 	approvers = append(approvers, b.impl.GetAuthor(b.State))
 
@@ -549,7 +553,7 @@ func (b *Broker) CreateApprovalNotifierComment() error {
 	// If the comment exists already delete it
 	if comment != nil {
 		if err := b.impl.DeletePRComment(b.ctx, b.GitHub(), comment.GetID()); err != nil {
-			return errors.Wrap(err, "deleting previous approval notifier")
+			return fmt.Errorf("deleting previous approval notifier: %w", err)
 		}
 	}
 
@@ -592,7 +596,7 @@ func (b *Broker) CreateApprovalNotifierComment() error {
 	// Post the new comment to the pull request
 	_, err = b.impl.CreatePRComment(b.ctx, b.GitHub(), b.State, commentBody)
 	if err != nil {
-		return errors.Wrap(err, "creating approval notifier comment")
+		return fmt.Errorf("creating approval notifier comment: %w", err)
 	}
 
 	return nil
@@ -605,13 +609,13 @@ func (b *Broker) HandleApprovalNotifierComment(comment *gogithub.IssueComment) e
 	// add the comment again
 	checksReady, err := b.ChecksReadyToMerge()
 	if err != nil {
-		return errors.Wrap(err, "looking at pull request check runs")
+		return fmt.Errorf("looking at pull request check runs: %w", err)
 	}
 
 	// 2. Check the labels are ready
 	labelsReady, err := b.LabelsReadyToMerge()
 	if err != nil {
-		return errors.Wrap(err, "looking at pull request labels")
+		return fmt.Errorf("looking at pull request labels: %w", err)
 	}
 
 	// We need the labels and the checks to merge
@@ -624,7 +628,7 @@ func (b *Broker) HandleApprovalNotifierComment(comment *gogithub.IssueComment) e
 			missing = append(missing, "checks")
 		}
 		logrus.Infof(
-			"Not merging. as pull request not yet ready. Has missing: %s",
+			"⏳ Not merging as pull request is not yet ready. Has missing: %s",
 			strings.Join(missing, ","),
 		)
 		return nil
@@ -632,7 +636,7 @@ func (b *Broker) HandleApprovalNotifierComment(comment *gogithub.IssueComment) e
 
 	// Merge PR → → → →
 	if err := b.MergePullRequest(); err != nil {
-		return errors.Wrap(err, "merging pull request")
+		return fmt.Errorf("merging pull request: %w", err)
 	}
 
 	// If PR has merged, delete the approval notifier
@@ -650,7 +654,7 @@ func (b *Broker) VerifyChecks() (checksPassed bool, err error) {
 	// Get the checks from the sha point
 	checkruns, err := b.impl.GetPRCheckRuns(b.ctx, b.GitHub(), b.State)
 	if err != nil {
-		return false, errors.Wrap(err, "getting check runs for pull request")
+		return false, fmt.Errorf("getting check runs for pull request: %w", err)
 	}
 	failed := 0
 	for _, run := range checkruns.CheckRuns {
@@ -685,9 +689,9 @@ func (bi *defaultBrokerImplementation) GetPRCheckRuns(
 		state.PullRequest.GetHead().GetSHA(),
 	)
 	if err != nil {
-		return nil, errors.Wrapf(
-			err, "getting check runs for PR %d",
-			state.PullRequest.GetNumber(),
+		return nil, fmt.Errorf(
+			"getting check runs for PR %d: %w",
+			state.PullRequest.GetNumber(), err,
 		)
 	}
 	return runs, nil
@@ -704,7 +708,7 @@ func (b *Broker) LabelsReadyToMerge() (ready bool, err error) {
 		b.ctx.Value(ckey).(ContextData).PullRequest(),
 	)
 	if err != nil {
-		return ready, errors.Wrap(err, "fetching PR from GitHub")
+		return ready, fmt.Errorf("fetching PR from GitHub: %w", err)
 	}
 
 	// Check that the required labels are set
@@ -740,7 +744,7 @@ RequiredLoop:
 		return false, errors.New(errMsg)
 	}
 
-	logrus.Infof("✅ Pull Request #%d has all requirements to merge", pr.GetNumber())
+	logrus.Infof("✅ Pull Request #%d has all labels required to merge", pr.GetNumber())
 	return true, nil
 }
 
@@ -752,7 +756,7 @@ func (b *Broker) ReadContext() {
 func (b *Broker) InitState() error {
 	s, err := b.impl.ReadState(b.ctx)
 	if err != nil {
-		return errors.Wrap(err, "initializing state")
+		return fmt.Errorf("initializing state: %w", err)
 	}
 	b.State = s
 	return nil
@@ -768,7 +772,7 @@ func (b *Broker) MergePullRequest() error {
 		b.ctx.Value(ckey).(ContextData).PullRequest(),
 	)
 	if err != nil {
-		return errors.Wrap(err, "fetching PR from GitHub")
+		return fmt.Errorf("fetching PR from GitHub: %w", err)
 	}
 
 	if pr.GetMerged() {
@@ -779,7 +783,7 @@ func (b *Broker) MergePullRequest() error {
 	if err := b.impl.MergePullRequest(
 		b.ctx, b.GitHub(), b.ctx.Value(ckey).(ContextData).Repository(), pr.GetNumber(),
 	); err != nil {
-		return errors.Wrap(err, "merging pull request")
+		return fmt.Errorf("merging pull request: %w", err)
 
 	}
 	return nil
@@ -807,7 +811,7 @@ func (bi *defaultBrokerImplementation) GetRepoOwners(
 	reader := owners.NewReader()
 	list, err = reader.GetDirectoryOwners(repoRoot)
 	if err != nil {
-		return list, errors.Wrap(err, "reading top repository OWNERS file")
+		return list, fmt.Errorf("reading top repository OWNERS file: %w", err)
 	}
 	return list, nil
 }
@@ -828,7 +832,7 @@ func (bi *defaultBrokerImplementation) AddLabel(
 	}
 	logrus.Infof("Adding label %s to issue #%d", labelName, issueID)
 	if err := gh.AddLabel(org, repo, issueID, labelName); err != nil {
-		return errors.Wrapf(err, "adding label to #%d", issueID)
+		return fmt.Errorf("adding label to #%d: %w", issueID, err)
 	}
 	return nil
 }
@@ -842,8 +846,8 @@ func (bi *defaultBrokerImplementation) GetChangedFiles(ctx context.Context, gh *
 		ctx.Value(ckey).(ContextData).PullRequest(),
 	)
 	if err != nil {
-		return files, errors.Wrapf(
-			err, "listing PR#%d files", ctx.Value(ckey).(ContextData).PullRequest(),
+		return files, fmt.Errorf(
+			"listing PR#%d files: %w", ctx.Value(ckey).(ContextData).PullRequest(), err,
 		)
 	}
 	logrus.Infof(
@@ -896,7 +900,7 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 	// Check the files modified by the PR
 	files, err := bi.GetChangedFiles(ctx, gh)
 	if err != nil {
-		return approvals, errors.Wrap(err, "listing pull request files")
+		return approvals, fmt.Errorf("listing pull request files: %w", err)
 	}
 
 	// Build a revers lookup map
@@ -921,7 +925,7 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 			filepath.Join(repoRoot, f.GetFilename()),
 		)
 		if err != nil {
-			return approvals, errors.Wrapf(err, "getting owners from %s", f)
+			return approvals, fmt.Errorf("getting owners from %s: %w", f, err)
 		}
 
 		// Check the approvers to see if we have one
@@ -968,8 +972,7 @@ func (bi *defaultBrokerImplementation) GetNeededApprovers(
 		)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"getting owners for path: %s: %w",
-				filepath.Join(repoRoot, file.GetFilename()), err,
+				"getting owners for path: %s: %w", file.GetFilename(), err,
 			)
 		}
 		list.Append(loopList)
@@ -994,7 +997,7 @@ func (bi *defaultBrokerImplementation) GetUserPerms(
 	// Get the top level owners
 	owners, err := bi.GetRepoOwners(ctx)
 	if err != nil {
-		return userPerms, errors.Wrap(err, "getting repository owners")
+		return userPerms, fmt.Errorf("getting repository owners: %w", err)
 	}
 
 	for _, user := range owners.Approvers {
@@ -1042,13 +1045,13 @@ func (bi *defaultBrokerImplementation) GetApprovalNotifierComment(
 		ctx, ctx.Value(ckey).(ContextData).Repository(), prid,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "listing comments to find approval notifier")
+		return nil, fmt.Errorf("listing comments to find approval notifier: %w", err)
 	}
 
 	// Get the bot user from the GH API
 	botuser, err := bi.GetBotUser(ctx, gh)
 	if err != nil {
-		return nil, errors.Wrap(err, "getting GitHub api user")
+		return nil, fmt.Errorf("getting GitHub api user: %w", err)
 	}
 
 	// Range all PRs until we find it
@@ -1116,7 +1119,7 @@ func (bi *defaultBrokerImplementation) GetApprovers(
 		ctx.Value(ckey).(ContextData).PullRequest(),
 	)
 	if err != nil {
-		return approvers, reviewers, errors.Wrap(err, "listing PR comments")
+		return approvers, reviewers, fmt.Errorf("listing PR comments: %w", err)
 	}
 
 	approvers = []string{}
