@@ -64,7 +64,7 @@ approvers:
 	require.Equal(t, 4, len(owners.Reviewers))
 	require.Equal(t, 4, len(owners.Approvers))
 
-	os.Chdir(dir)
+	require.NoError(t, os.Chdir(dir))
 	owners, err = impl.computeOwners(filepath.Join(".github", "dependabot.yml"))
 	require.Nil(t, err, err)
 	require.Equal(t, 2, len(owners.Reviewers))
