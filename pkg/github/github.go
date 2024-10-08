@@ -3,7 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -175,7 +175,7 @@ func (g *githubClient) MergePullRequest(
 			if err == nil {
 				logrus.Infof("Successfully merged commit %d", number)
 			}
-			m, xerr := ioutil.ReadAll(r.Body)
+			m, xerr := io.ReadAll(r.Body)
 			if xerr != nil {
 				logrus.Error("Could not read failed merge body")
 			}
