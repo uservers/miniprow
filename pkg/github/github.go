@@ -17,7 +17,8 @@ import (
 
 const (
 	// TokenEnvKey is the default GitHub token environemt variable key
-	TokenEnvKey = "GITHUB_TOKEN"
+	TokenEnvKey = "GITHUB_TOKEN" //nolint:gosec
+
 	// GitHubURL Prefix for github URLs
 	GitHubURL = "https://github.com/"
 )
@@ -100,7 +101,7 @@ func DefaultOptions() *Options {
 
 func New() *GitHub {
 	token := env.Default(TokenEnvKey, "")
-	client, _ := NewWithToken(token) // nolint: errcheck
+	client, _ := NewWithToken(token) //nolint:errcheck
 	return client
 }
 
@@ -154,7 +155,7 @@ func (github *GitHub) GetComment(owner, repo string, commentID int64) (comment *
 	return comment, err
 }
 
-func (github *GitHub) MergePullRequest(ctx context.Context, owner string, repo string, number int) error {
+func (github *GitHub) MergePullRequest(ctx context.Context, owner, repo string, number int) error {
 	return github.client.MergePullRequest(ctx, owner, repo, number)
 }
 
@@ -220,7 +221,6 @@ func (github *GitHub) ListPullRequestFiles(ctx context.Context, slug string, pr 
 	}
 
 	return files, nil
-
 }
 
 // ListPullRequestFiles queries the GH api to get the list of changed files in a PR
@@ -260,7 +260,8 @@ func (github *GitHub) ListCheckRunsForRef(
 }
 
 func (g *githubClient) ListCheckRunsForRef(
-	ctx context.Context, owner, repo, ref string, opts *gogithub.ListCheckRunsOptions) (*gogithub.ListCheckRunsResults, error) {
+	ctx context.Context, owner, repo, ref string, opts *gogithub.ListCheckRunsOptions,
+) (*gogithub.ListCheckRunsResults, error) {
 	for shouldRetry := internal.DefaultGithubErrChecker(); ; {
 		runs, _, err := g.Client.Checks.ListCheckRunsForRef(ctx, owner, repo, ref, opts)
 		if !shouldRetry(err) {
@@ -271,9 +272,9 @@ func (g *githubClient) ListCheckRunsForRef(
 
 // GetIssue retrieves an issue from GitHub
 func (github *GitHub) GetIssue(
-	ctx context.Context, owner, repo string, IssueID int,
+	ctx context.Context, owner, repo string, issueID int,
 ) (pr *gogithub.Issue, err error) {
-	pr, _, err = github.client.GetIssue(ctx, owner, repo, IssueID)
+	pr, _, err = github.client.GetIssue(ctx, owner, repo, issueID)
 	return pr, err
 }
 
@@ -309,14 +310,14 @@ func (github *GitHub) GetIssueComments(ctx context.Context, slug string, number 
 func (g *githubClient) GetIssueComments(
 	ctx context.Context, owner, repo string, number int, opts *gogithub.IssueListCommentsOptions,
 ) (comments []*gogithub.IssueComment, err error) {
-	// Comment slkice to retrurn
+	// Comment slice to return
 	comments = []*gogithub.IssueComment{}
 	// Loop the comment pages
 	for {
 		for shouldRetry := internal.DefaultGithubErrChecker(); ; {
 			cm, resp, err := g.Client.Issues.ListComments(ctx, owner, repo, number, opts)
 			if !shouldRetry(err) {
-				labels := append(comments, cm...)
+				labels := append(comments, cm...) //nolint:gocritic
 				if resp.NextPage == 0 {
 					return labels, nil
 				}
@@ -403,7 +404,7 @@ func (g *githubClient) RemoveLabel(
 }
 
 // ParseSlug splits a repo slug (org/repo) into org + repo strings
-func ParseSlug(slug string) (string, string) {
+func ParseSlug(slug string) (org, repo string) {
 	partes := strings.Split(slug, "/")
 	if len(partes) != 2 {
 		logrus.Warn("Invalid repo slug")
@@ -426,15 +427,11 @@ func (github *GitHub) CreateComment(ctx context.Context, slug string, number int
 func (g *githubClient) CreateComment(
 	ctx context.Context, owner, repo string, number int, body string,
 ) (user *gogithub.IssueComment, err error) {
-
-	// comment := &gogithub.PullRequestComment{
 	comment := &gogithub.IssueComment{
 		Body: &body,
 	}
 
 	for shouldRetry := internal.DefaultGithubErrChecker(); ; {
-		//cm, _, err := g.Client.PullRequests.CreateComment(ctx, owner, repo, number, comment)
-
 		cm, _, err := g.Client.Issues.CreateComment(ctx, owner, repo, number, comment)
 		if !shouldRetry(err) {
 			return cm, err
@@ -456,7 +453,6 @@ func (github *GitHub) DeleteComment(ctx context.Context, slug string, commentID 
 func (g *githubClient) DeleteComment(
 	ctx context.Context, owner, repo string, commentID int64,
 ) (err error) {
-
 	for shouldRetry := internal.DefaultGithubErrChecker(); ; {
 		resp, err := g.Client.Issues.DeleteComment(ctx, owner, repo, commentID)
 		if !shouldRetry(err) {

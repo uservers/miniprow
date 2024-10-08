@@ -8,7 +8,6 @@ import (
 )
 
 func TestParseSlashCommands(t *testing.T) {
-
 	text := `Hola soy un comando
 	/lgtm
 	/lgtm with extra features

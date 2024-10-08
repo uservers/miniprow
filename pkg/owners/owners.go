@@ -18,8 +18,8 @@ func NewReader() *Reader {
 
 type Options struct{}
 
-func (r *Reader) Options() *Options {
-	return r.opts
+func (reader *Reader) Options() *Options {
+	return reader.opts
 }
 
 var DefaultOptions = &Options{}
@@ -97,12 +97,14 @@ func (l *List) Append(extraData *List) {
 	}
 }
 
-type User string
-type File struct {
-	Path      string
-	Approvers []User
-	Reviewers []User
-}
+type (
+	User string
+	File struct {
+		Path      string
+		Approvers []User
+		Reviewers []User
+	}
+)
 
 func (f *File) String() string {
 	return f.Path
@@ -132,7 +134,6 @@ func (u *User) Name() string { return string(*u) }
 
 // GetPathOwners analyises a path and returns a list of owners
 func (reader *Reader) GetPathOwners(path string) (res *List, err error) {
-	// return reader.impl.readPathOwners(path, reader.opts.GetRepoRoot())
 	return reader.impl.computeOwners(path)
 }
 
