@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.1.0
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '^1.19.2'
       - run: go build -o miniprow actions/broker/main.go
