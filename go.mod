@@ -6,10 +6,10 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/oauth2 v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
-	sigs.k8s.io/release-utils v0.7.5
+	sigs.k8s.io/release-utils v0.8.5
 )
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
