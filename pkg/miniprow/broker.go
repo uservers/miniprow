@@ -107,7 +107,8 @@ func (b *Broker) Run() (err error) {
 		return errors.New("unkown MiniProw event")
 	}
 
-	// TODO: Check if pr is merged before continuing
+	// TODO(puerco): Check if pr is merged before continuing
+	//nolint:gocritic
 	/*
 		// Checking if PR can be merged
 		ready, err := b.LabelsReadyToMerge()
@@ -340,7 +341,7 @@ func (b *Broker) HandleNewPR() error {
 	}
 
 	// if the user is an approver, we always add the label
-	// FIXME: Mal, implementa
+	// TODO(puerco): Mal, implementa
 	if userPerms["approver"] || len(neededApproves.Files) == 0 {
 		logrus.Infof("→ %s is an aprrover", author)
 		if err := b.impl.AddLabel(b.ctx, b.GitHub(), "approved"); err != nil {
@@ -547,7 +548,7 @@ func (b *Broker) CreateApprovalNotifierComment() error {
 	}
 	approvers = append(approvers, b.impl.GetAuthor(b.State))
 
-	// FIXME:
+	// TODO(puerco): Implement suggestions here
 	suggestedAssignees := []string{}
 
 	// If the comment exists already delete it
@@ -665,7 +666,6 @@ func (b *Broker) VerifyChecks() (checksPassed bool, err error) {
 				logrus.Infof(" ❌ last run of %s failed", run.GetName())
 				failed++
 			}
-
 		} else {
 			logrus.Warnf(" ⏳ check run %s has not completed yet", run.GetName())
 			failed++
@@ -695,7 +695,6 @@ func (bi *defaultBrokerImplementation) GetPRCheckRuns(
 		)
 	}
 	return runs, nil
-
 }
 
 // LabelsReadyToMerge checks if the PR is ready to merge
@@ -712,7 +711,7 @@ func (b *Broker) LabelsReadyToMerge() (ready bool, err error) {
 	}
 
 	// Check that the required labels are set
-	var missingLabels = []string{}
+	missingLabels := []string{}
 	logrus.Infof("PR requires the following labels: %s", strings.Join(b.config.RequiredLabels(), ", "))
 
 RequiredLoop:
@@ -784,14 +783,14 @@ func (b *Broker) MergePullRequest() error {
 		b.ctx, b.GitHub(), b.ctx.Value(ckey).(ContextData).Repository(), pr.GetNumber(),
 	); err != nil {
 		return fmt.Errorf("merging pull request: %w", err)
-
 	}
 	return nil
 }
 
 // MergePullRequest calls the GH API to merge the PR
 func (bi *defaultBrokerImplementation) MergePullRequest(
-	ctx context.Context, gh *github.GitHub, repoSlug string, prID int) error {
+	ctx context.Context, gh *github.GitHub, repoSlug string, prID int,
+) error {
 	org, repo := github.ParseSlug(repoSlug)
 	if org == "" || repo == "" {
 		return errors.New("unable to get comment, repo slug not valid")
@@ -818,7 +817,8 @@ func (bi *defaultBrokerImplementation) GetRepoOwners(
 
 // Adds a label to the current issue/PR
 func (bi *defaultBrokerImplementation) AddLabel(
-	ctx context.Context, gh *github.GitHub, labelName string) error {
+	ctx context.Context, gh *github.GitHub, labelName string,
+) error {
 	org, repo := github.ParseSlug(ctx.Value(ckey).(ContextData).Repository())
 	if org == "" || repo == "" {
 		return errors.New("unable to get comment, repo slug not valid")
@@ -863,8 +863,7 @@ func (bi *defaultBrokerImplementation) RepoRoot(ctx context.Context) string {
 		logrus.Error("Unable to infer repository root, repo slug not valid")
 	}
 	// There must be a better way to find the cloned repo
-	root := filepath.Join(os.Getenv("GITHUB_WORKSPACE"))
-
+	root := os.Getenv("GITHUB_WORKSPACE")
 	if !util.Exists(root) {
 		logrus.Errorf("Unable to find repository root in %s", root)
 		return ""
@@ -921,7 +920,7 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 	for _, f := range files {
 		logrus.Infof(" > Checking File: %s", f.GetFilename())
 
-		owners, err := reader.GetPathOwners(
+		ownerList, err := reader.GetPathOwners(
 			filepath.Join(repoRoot, f.GetFilename()),
 		)
 		if err != nil {
@@ -930,7 +929,7 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 
 		// Check the approvers to see if we have one
 		approved := false
-		for _, user := range owners.Approvers {
+		for _, user := range ownerList.Approvers {
 			if _, ok := revkey[string(user)]; ok {
 				approved = false
 				break
@@ -941,7 +940,7 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 		if !approved {
 			approvals = append(approvals, &fileApprovers{
 				Filename: f.GetFilename(),
-				Owners:   *owners,
+				Owners:   *ownerList,
 			})
 		}
 	}
@@ -950,7 +949,8 @@ func (bi *defaultBrokerImplementation) GetMissingApprovers(
 
 // GetNeededApprovers  returns the approvals needed to merge the PR
 func (bi *defaultBrokerImplementation) GetNeededApprovers(
-	ctx context.Context, gh *github.GitHub) (list *owners.List, err error) {
+	ctx context.Context, gh *github.GitHub,
+) (list *owners.List, err error) {
 	// Check the repository root before proceeding
 	repoRoot := bi.RepoRoot(ctx)
 	if repoRoot == "" {
@@ -995,12 +995,12 @@ func (bi *defaultBrokerImplementation) GetUserPerms(
 	}
 
 	// Get the top level owners
-	owners, err := bi.GetRepoOwners(ctx)
+	ownerList, err := bi.GetRepoOwners(ctx)
 	if err != nil {
 		return userPerms, fmt.Errorf("getting repository owners: %w", err)
 	}
 
-	for _, user := range owners.Approvers {
+	for _, user := range ownerList.Approvers {
 		if userName == string(user) {
 			logrus.Infof(
 				"User %s is an approver in %s", userName,
@@ -1009,7 +1009,7 @@ func (bi *defaultBrokerImplementation) GetUserPerms(
 			userPerms["approver"] = true
 		}
 	}
-	for _, user := range owners.Reviewers {
+	for _, user := range ownerList.Reviewers {
 		if userName == string(user) {
 			logrus.Infof(
 				"User %s is a reviewer in %s", userName,
@@ -1021,14 +1021,15 @@ func (bi *defaultBrokerImplementation) GetUserPerms(
 
 	logrus.Infof(
 		"Found %d top-level approvers and %d reviewers",
-		len(owners.Approvers), len(owners.Reviewers),
+		len(ownerList.Approvers), len(ownerList.Reviewers),
 	)
 	return userPerms, nil
 }
 
 // GetApprovalNotifierComment
 func (bi *defaultBrokerImplementation) GetApprovalNotifierComment(
-	ctx context.Context, gh *github.GitHub, s *State) (comment *gogithub.IssueComment, err error) {
+	ctx context.Context, gh *github.GitHub, s *State,
+) (comment *gogithub.IssueComment, err error) {
 	// Check if we have th PR ready
 	if s.PullRequest == nil {
 		return comment, errors.New("pull request not found in state")
@@ -1062,7 +1063,6 @@ func (bi *defaultBrokerImplementation) GetApprovalNotifierComment(
 	}
 	logrus.Info("Approval notifier comment not found")
 	return nil, nil
-
 }
 
 // IsApprovalNotifier checks a comment to see if it is the approval
@@ -1103,7 +1103,6 @@ func (bi *defaultBrokerImplementation) CreatePRComment(
 func (bi *defaultBrokerImplementation) DeletePRComment(
 	ctx context.Context, gh *github.GitHub, commentID int64,
 ) error {
-
 	return gh.DeleteComment(ctx, ctx.Value(ckey).(ContextData).Repository(), commentID)
 }
 
@@ -1111,7 +1110,7 @@ func (bi *defaultBrokerImplementation) DeletePRComment(
 // note the PR author IS NOT INCLUDED IN THIS LIST.
 func (bi *defaultBrokerImplementation) GetApprovers(
 	ctx context.Context, gh *github.GitHub,
-) (approvers []string, reviewers []string, err error) {
+) (approvers, reviewers []string, err error) {
 	logrus.Info("🤓 Looking for approvers and reviewers in PR comments")
 	// Get all the PR comments
 	comments, err := gh.GetIssueComments(

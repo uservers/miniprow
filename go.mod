@@ -1,6 +1,6 @@
 module github.com/uservers/miniprow
 
-go 1.19
+go 1.23
 
 require (
 	github.com/google/go-github/v48 v48.2.0

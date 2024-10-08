@@ -5,8 +5,10 @@ import (
 	"strconv"
 )
 
-type ContextKey string
-type ContextData map[string]string
+type (
+	ContextKey  string
+	ContextData map[string]string
+)
 
 var ckey ContextKey = "data"
 
@@ -20,6 +22,7 @@ func NewContextData() ContextData {
 		"token":   os.Getenv("MINIPROW_TOKEN"),
 	}
 }
+
 func (d ContextData) getStringVal(key string) string {
 	if val, ok := d[key]; ok {
 		return val
@@ -48,7 +51,7 @@ func (d ContextData) Issue() int {
 		return 0
 	}
 
-	return int(issue)
+	return issue
 }
 
 func (d ContextData) PullRequest() int {

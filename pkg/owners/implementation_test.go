@@ -39,13 +39,13 @@ approvers:
 	require.Nil(
 		t, os.WriteFile(
 			filepath.Join(dir, "sub", "test.txt"),
-			[]byte("test"), os.FileMode(0644),
+			[]byte("test"), os.FileMode(0o644),
 		),
 	)
 	require.Nil(
 		t, os.WriteFile(
 			filepath.Join(dir, ".github", "dependabot.yml"),
-			[]byte("test"), os.FileMode(0644),
+			[]byte("test"), os.FileMode(0o644),
 		),
 	)
 
@@ -64,7 +64,7 @@ approvers:
 	require.Equal(t, 4, len(owners.Reviewers))
 	require.Equal(t, 4, len(owners.Approvers))
 
-	os.Chdir(dir)
+	require.NoError(t, os.Chdir(dir))
 	owners, err = impl.computeOwners(filepath.Join(".github", "dependabot.yml"))
 	require.Nil(t, err, err)
 	require.Equal(t, 2, len(owners.Reviewers))
@@ -95,7 +95,6 @@ approvers:
 	require.Nil(t, err, err)
 	require.Equal(t, 4, len(owners.Reviewers))
 	require.Equal(t, 4, len(owners.Approvers))
-
 }
 
 func mkTempRepo(t *testing.T) string {
@@ -127,7 +126,7 @@ func TestReadRespositoryAlias(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	// At this point wer have an empty repo. We should get an empty alias list
-	list, err := impl.readRespositoryAlias(filepath.Join(dir))
+	list, err := impl.readRespositoryAlias(dir)
 	require.NoError(t, err)
 	require.NotNil(t, list)
 	require.NotNil(t, list.Aliases)

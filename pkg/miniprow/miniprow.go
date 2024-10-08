@@ -133,7 +133,6 @@ func ParseSlashCommands(commentText string) (commands []SlashCommand, err error)
 			logrus.Error(errors.Wrapf(err, "while getting command from label %s", tokens[0]))
 		}
 		commands = append(commands, cmd)
-
 	}
 	return commands, err
 }
