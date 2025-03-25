@@ -36,7 +36,7 @@ jobs:
         echo "TAG=canary" >> "$GITHUB_ENV"
         echo "STEM=0" >> "$GITHUB_ENV"
     
-    - uses: actions/checkout@v3    
+    - uses: actions/checkout@v4    
     #- uses: sigstore/cosign-installer@main
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3.2.0

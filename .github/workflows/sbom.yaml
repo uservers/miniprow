@@ -24,5 +24,5 @@ jobs:
                 bom-release: ${{ github.event.inputs.bomVersion }}
             # - run: ldd --version
             - name: Checkout
-              uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+              uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
             - run: bom generate -c .sbom.yaml
